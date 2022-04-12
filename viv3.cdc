@@ -1,10 +1,3 @@
-/*:
-  # VIV3
-
-  - Author: VIV3 Inc.
-  - Copyright: 2020 VIV3 Inc.
-*/
-
 
 import FungibleToken from 0xf233dcee88fe0abe
 import NonFungibleToken from 0x1d7e57aa55817448
@@ -217,19 +210,15 @@ pub contract VIV3 {
         }
 
         pub fun getPrice(tokenId: UInt64): UFix64? {
-            pre {
-                self.collection.borrow()!.borrowNFT(id: tokenId) != nil:
-                    "Token does not exist in the owner's collection!"
+            if let cap = self.collection.borrow() {
+                if cap!.getIDs().contains(tokenId) {
+                    let token = cap!.borrowNFT(id: tokenId)
+                    return self.prices[token.uuid]
+                }
             }
 
-            let token = self.collection.borrow()!.borrowNFT(id: tokenId)
-            let uuid = token.uuid
-
-            assert(self.prices[uuid] != nil, message: "No token with this Id on sale!")
-
-            return self.prices[uuid]
+            return nil
         }
-
     }
 
     pub fun createTokenSaleCollection(collection: Capability<&NonFungibleToken.Collection>, ownerCapability: Capability<&{FungibleToken.Receiver}>, beneficiaryCapability: Capability<&{FungibleToken.Receiver}>, royaltyCapability: Capability<&{FungibleToken.Receiver}>, fee: UFix64, royalty: UFix64, currency: Type): @TokenSaleCollection {
